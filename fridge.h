@@ -186,8 +186,10 @@ public:
 
 	// extensions
 	
-	String onCustomLink(const String &path,  const char **mime_type) override;
-    virtual bool hasPlot() override    { return true; }
+	// String onCustomLink(const String &path,  const char **mime_type) override;
+    // removed 2026-04-04
+	
+	virtual bool hasPlot() override    { return true; }
 
 
 };

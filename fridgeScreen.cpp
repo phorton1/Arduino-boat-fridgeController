@@ -334,8 +334,8 @@ void fridgeScreen::loop()
 
         #if 1
             static bool last_force;
-            bool force = (fridge->getBool(ID_WIFI) &&
-                 fridge->getConnectStatus() != IOT_CONNECT_STA) ||
+            bool force =
+                fridge->getConnectStatus() != IOT_CONNECT_STA ||
                 fridge->_inv_error ||
                 fridge->m_log_error ||
                 fridge->m_fridge_temp_error ||
@@ -637,18 +637,15 @@ void fridgeScreen::showScreen()
         char buf2[LCD_BUF_LEN] = {0};
         const char *wifi = "W_OFF";
 
-        if (fridge->getBool(ID_WIFI))
-        {
-            iotConnectStatus_t mode = fridge->getConnectStatus();
-            if (mode == IOT_CONNECT_ALL)
-                wifi = "AP_STA";
-            else if (mode == IOT_CONNECT_AP)
-                wifi = "AP";
-            else if (mode == IOT_CONNECT_STA)
-                wifi = "STA";
-            else
-                wifi = "W_ERR";
-        }
+        iotConnectStatus_t mode = fridge->getConnectStatus();
+        if (mode == IOT_CONNECT_ALL)
+            wifi = "AP_STA";
+        else if (mode == IOT_CONNECT_AP)
+            wifi = "AP";
+        else if (mode == IOT_CONNECT_STA)
+            wifi = "STA";
+        else
+            wifi = "W_ERR";
 
         printBufFloat(buf1,5,fridge->_fridge_temp,fridge->m_fridge_temp_error);
         printBufFloat(buf1,7,fridge->_comp_temp,fridge->m_comp_temp_error);
@@ -680,7 +677,6 @@ void fridgeScreen::showScreen()
             String sta_ssid = fridge->getString(ID_STA_SSID);
             iotConnectStatus_t mode = fridge->getConnectStatus();
             const char *mode_str =
-                !fridge->getBool(ID_WIFI) ? "WIFI_OFF" :
                 mode == WIFI_MODE_AP ? "WIFI_AP" :
                 mode == WIFI_MODE_STA ? sta_ssid.c_str() : // "WIFI_STA" :
                 mode == WIFI_MODE_APSTA ? "WIFI_AP_STA" :

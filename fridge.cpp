@@ -108,6 +108,8 @@ void Fridge::setup()
 	fridge_screen.init();
 
 	myIOTDevice::setup();
+	addDataLog(&data_log, 2592000, 1);
+		// default_period=2592000 (month), with_degrees=1, no custom series colors
 	randomSeed(time(NULL) + millis() + micros());
 	setPixelsBrightness(_led_brightness);
 
@@ -679,33 +681,10 @@ void Fridge::loop()
 
 
 
-//----------------------------------------
-// chart API
-//----------------------------------------
-
-
-String Fridge::onCustomLink(const String &path,  const char **mime_type)
-{
-	LOGD("Fridge::onCustomLink(%s)",path.c_str());
-	if (path.startsWith("chart_header"))
-	{
-		*mime_type = "application/json";
-		return data_log.getChartHeader(2592000,1,NULL);
-			// 2592000 = default_period = month
-			// 1 = with_degrees
-			// NULL = no custom series colors
-	}
-	else if (path.startsWith("chart_data"))
-	{
-		int secs = myiot_web_server->getArg("secs",0);
-		return data_log.sendChartData(secs,false);
-	}
-	else if (path.startsWith("update_chart_data"))
-	{
-		uint32_t since = myiot_web_server->getArg("since",0);
-		return data_log.sendChartData(since,true);
-	}
-    return "";
-}
+/*
+ * Fridge::onCustomLink() removed -- chart_header, chart_data, update_chart_data
+ * and all maintenance endpoints are now handled by myIOTDevice::onCustomLink()
+ * via the addDataLog() registration in Fridge::setup().
+ */
 
 
