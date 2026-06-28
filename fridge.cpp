@@ -37,6 +37,7 @@ typedef struct
 	int16_t		temp2;
 	int16_t		temp3;
 	uint16_t	rpm;
+	int16_t		vx10;
 } fridgeLog_t;
 
 // The tick_intervals are 0 based and will be will be lined up
@@ -46,9 +47,10 @@ logColumn_t  fridge_cols[] = {
 	{"comp",	LOG_COL_TYPE_CENTIGRADE_RAW,	10,		},
 	{"extra",	LOG_COL_TYPE_CENTIGRADE_RAW,	10,		},
 	{"rpm",		LOG_COL_TYPE_UINT16,		    1000,	},
+	{"volts",	LOG_COL_TYPE_INT16_10,			1,		},
 };
 
-myIOTDataLog data_log("fridgeData",4,fridge_cols);
+myIOTDataLog data_log("fridgeData",5,fridge_cols);
 	// 0 = debug_send_data LEVEL
 
 
@@ -610,6 +612,7 @@ void Fridge::loop()
 	// and log temperature/rpm changes
 
 	#define PUBLISH_INTERVAL 	2000
+	#define MAX_LOG_INTERVAL	(10*60*1000)	// 10 minutes
 
 	bool do_log = 0;
 	uint32_t now = millis();
@@ -663,18 +666,25 @@ void Fridge::loop()
 			setBool(ID_INV_FAN,fridge_volts._fan_on);
 
 		if (_volts_inv != fridge_volts._volts_inv)
+		{
+			do_log = 1;
 			setFloat(ID_VOLTS_INV,fridge_volts._volts_inv);
+		}
 		if (_volts_5v != fridge_volts._volts_5V)
 			setFloat(ID_VOLTS_5V,fridge_volts._volts_5V);
 	}
 
-	if (do_log)
+
+	static uint32_t last_log;
+	if (do_log || (now - last_log >- MAX_LOG_INTERVAL))
 	{
+		last_log = now;
 		fridgeLog_t log_rec;
 		log_rec.temp1 = m_raw_fridge_temp;
 		log_rec.temp2 = m_raw_comp_temp;
 		log_rec.temp3 = m_raw_extra_temp;
 		log_rec.rpm   = _comp_rpm;
+		log_rec.vx10  = ((float)(fridge_volts._volts_inv * 10.0)+0.05);
 		m_log_error = !data_log.addRecord((logRecord_t) &log_rec);
 	}
 }
