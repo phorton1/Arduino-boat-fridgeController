@@ -616,6 +616,13 @@ void Fridge::loop()
 
 	bool do_log = 0;
 	uint32_t now = millis();
+
+	// volts are logged only on a 0.2V or larger move from the last logged
+	// value, so that 0.1V ADC chatter does not drive the log sample rate
+
+	static int16_t last_logged_vx10 = 0;
+	int16_t vx10 = ((float)(fridge_volts._volts_inv * 10.0)+0.05);
+
 	static uint32_t last_publish;
 	if (now - last_publish > PUBLISH_INTERVAL)
 	{
@@ -667,8 +674,9 @@ void Fridge::loop()
 
 		if (_volts_inv != fridge_volts._volts_inv)
 		{
-			do_log = 1;
 			setFloat(ID_VOLTS_INV,fridge_volts._volts_inv);
+			if (abs(vx10 - last_logged_vx10) >= 2)
+				do_log = 1;
 		}
 		if (_volts_5v != fridge_volts._volts_5V)
 			setFloat(ID_VOLTS_5V,fridge_volts._volts_5V);
@@ -676,7 +684,7 @@ void Fridge::loop()
 
 
 	static uint32_t last_log;
-	if (do_log || (now - last_log >- MAX_LOG_INTERVAL))
+	if (do_log || (now - last_log >= MAX_LOG_INTERVAL))
 	{
 		last_log = now;
 		fridgeLog_t log_rec;
@@ -684,7 +692,8 @@ void Fridge::loop()
 		log_rec.temp2 = m_raw_comp_temp;
 		log_rec.temp3 = m_raw_extra_temp;
 		log_rec.rpm   = _comp_rpm;
-		log_rec.vx10  = ((float)(fridge_volts._volts_inv * 10.0)+0.05);
+		log_rec.vx10  = vx10;
+		last_logged_vx10 = vx10;
 		m_log_error = !data_log.addRecord((logRecord_t) &log_rec);
 	}
 }
