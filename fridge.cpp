@@ -53,6 +53,10 @@ logColumn_t  fridge_cols[] = {
 myIOTDataLog data_log("fridgeData",5,fridge_cols);
 	// 0 = debug_send_data LEVEL
 
+static String series_colors = "[ \"#4bb2c5\", \"#EAA228\", \"#c5b47f\", \"#579575\", \"#ff0000\" ]";
+//  default colors:                cyan,        orange,      lt brown,    green   plus red
+
+
 
 Fridge *fridge;
 myIOTTempSensor t_sense(PIN_ONE_WIRE);
@@ -110,8 +114,8 @@ void Fridge::setup()
 	fridge_screen.init();
 
 	myIOTDevice::setup();
-	addDataLog(&data_log, 2592000, 1);
-		// default_period=2592000 (month), with_degrees=1, no custom series colors
+	addDataLog(&data_log, 2592000, 1, &series_colors);
+		// default_period=2592000 (month), with_degrees=1, custom series colors
 	randomSeed(time(NULL) + millis() + micros());
 	setPixelsBrightness(_led_brightness);
 
